@@ -1,0 +1,71 @@
+:root{
+  --background:#dfdfdf;
+  --foreground:#1a1a1a;
+  --primary:#65ac14;
+  --error:#a26975;
+  --font-family: 'DM Sans', sans-serif;  
+}
+
+/* Primevue Aura Theme colors override */
+:root{
+  --p-primary-color: var(--primary) !important;
+
+  --p-primary-50: color-mix(in srgb, var(--primary) 10%, white) !important;
+  --p-primary-100: color-mix(in srgb, var(--primary) 20%, white) !important;
+  --p-primary-200: color-mix(in srgb, var(--primary) 30%, white) !important;
+  --p-primary-300: color-mix(in srgb, var(--primary) 40%, white) !important;
+  --p-primary-400: color-mix(in srgb, var(--primary) 60%, white) !important;
+  --p-primary-500: var(--primary) !important;
+  --p-primary-600: color-mix(in srgb, var(--primary) 85%, black) !important;
+  --p-primary-700: color-mix(in srgb, var(--primary) 70%, black) !important;
+  --p-primary-800: color-mix(in srgb, var(--primary) 60%, black) !important;
+  --p-primary-900: color-mix(in srgb, var(--primary) 50%, black) !important;
+  --p-primary-950: color-mix(in srgb, var(--primary) 40%, black) !important;
+
+  --p-emerald-50: color-mix(in srgb, var(--primary) 10%, white) !important;
+  --p-emerald-100: color-mix(in srgb, var(--primary) 20%, white) !important;
+  --p-emerald-200: color-mix(in srgb, var(--primary) 30%, white) !important;
+  --p-emerald-300: color-mix(in srgb, var(--primary) 40%, white) !important;
+  --p-emerald-400: color-mix(in srgb, var(--primary) 60%, white) !important;
+  --p-emerald-500: var(--primary) !important;
+  --p-emerald-600: color-mix(in srgb, var(--primary) 85%, black) !important;
+  --p-emerald-700: color-mix(in srgb, var(--primary) 70%, black) !important;
+  --p-emerald-800: color-mix(in srgb, var(--primary) 60%, black) !important;
+  --p-emerald-900: color-mix(in srgb, var(--primary) 50%, black) !important;
+  --p-emerald-950: color-mix(in srgb, var(--primary) 40%, black) !important;
+
+  --p-radiobutton-checked-background: var(--primary) !important;
+  --p-radiobutton-checked-border-color: var(--primary) !important;
+  --p-radiobutton-icon-checked-color: var(--background) !important;
+
+  --p-checkbox-checked-background: var(--primary) !important;
+  --p-checkbox-checked-border-color: var(--primary) !important;
+
+  --p-inputswitch-checked-background: var(--primary) !important;
+
+  --p-slider-range-background: var(--primary) !important;
+
+  --p-datepicker-date-selected-background: var(--primary) !important;
+  --p-datepicker-date-selected-color: var(--background) !important;
+
+  --p-focus-ring-color: color-mix(in srgb, var(--primary) 25%, transparent) !important;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --background:#212121;
+    --foreground:#dfdfdf;
+  }
+}
+
+
+html,body,#app{
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family);
+}
+

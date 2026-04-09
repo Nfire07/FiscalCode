@@ -1,0 +1,166 @@
+classDiagram
+  class Layout {
+    +String tag = "div"
+    +String type = "flex"
+    +String|Number columns = null
+    +String|Number rows = null
+    +String|Number gap = "1rem"
+    +String rowGap = null
+    +String columnGap = null
+    +String align = null
+    +String justify = null
+    +String direction = null
+    +Boolean wrap = true
+    +Boolean inline = false
+    +String minWidth = null
+    +Boolean autoFill = false
+    +Boolean autoFit = false
+    +String|Array areas = null
+    +String padding = null
+    +String width = null
+    +String height = null
+    +String maxWidth = null
+    +Boolean center = false
+    +String margin = null
+    +resolved() Object
+    +resolvedMode() String
+    +computedStyle() Object
+    +normalizeGap(value) String
+    +parseTemplateType(type) Object
+  }
+
+  class ParsedType {
+    +String mode
+    +String columns
+    +String direction
+  }
+
+  class FlexMode {
+    +String flexDirection
+    +String flexWrap
+  }
+
+  class GridMode {
+    +String gridTemplateColumns
+    +String gridTemplateRows
+    +String gridTemplateAreas
+  }
+
+  Layout --> ParsedType : parseTemplateType()
+  ParsedType --> FlexMode : mode == "flex"
+  ParsedType --> GridMode : mode == "grid"
+
+  class DynamicForm {
+    +Array fields
+    +String submitText = "Submit"
+    +Boolean loading = false
+    +Object formData
+    +Object errors
+    +Object passwordVisible
+    +Object fileNames
+    +created()
+    +togglePasswordVisibility(name)
+    +handleFileChange(event, field)
+    +addTag(event, name)
+    +removeTag(name, index)
+    +validateField(field) Boolean
+    +handleSubmit()
+    +emit submit-form
+  }
+
+  class FieldSchema {
+    +String name
+    +String type
+    +String label
+    +Boolean required
+    +Boolean fullWidth
+    +String placeholder
+    +String hint
+    +String icon
+    +Any defaultValue
+    +String errorMessage
+    +Function validate
+    +String pattern
+    +String patternMessage
+    +Number minLength
+  }
+
+  class TextField {
+    type: text | email | number | password
+    +Number min
+    +Number max
+    +Number step
+  }
+
+  class TextareaField {
+    type: textarea
+    +Number rows
+    +Number maxLength
+    +Boolean autoResize
+  }
+
+  class SelectField {
+    type: select | multiselect
+    +Array options
+    +Number maxSelectedLabels
+  }
+
+  class RadioField {
+    type: radio
+    +Array options
+  }
+
+  class RangeField {
+    type: range
+    +Number min
+    +Number max
+    +Number step
+    +Array labels
+  }
+
+  class DateField {
+    type: date | time | datetime-local | month | week
+  }
+
+  class FileField {
+    type: file
+    +String accept
+    +Boolean multiple
+  }
+
+  class BooleanField {
+    type: checkbox | toggle
+  }
+
+  class TagsField {
+    type: tags
+  }
+
+  class ColorField {
+    type: color
+  }
+
+  class DividerField {
+    type: divider
+  }
+
+  class OptionItem {
+    +String label
+    +Any value
+    +String icon
+  }
+
+  DynamicForm --> FieldSchema : fields[]
+  FieldSchema <|-- TextField
+  FieldSchema <|-- TextareaField
+  FieldSchema <|-- SelectField
+  FieldSchema <|-- RadioField
+  FieldSchema <|-- RangeField
+  FieldSchema <|-- DateField
+  FieldSchema <|-- FileField
+  FieldSchema <|-- BooleanField
+  FieldSchema <|-- TagsField
+  FieldSchema <|-- ColorField
+  FieldSchema <|-- DividerField
+  SelectField --> OptionItem : options[]
+  RadioField --> OptionItem : options[]
