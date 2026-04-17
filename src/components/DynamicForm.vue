@@ -9,7 +9,7 @@
         :class="{ 'has-error': errors[field.name], 'full-width': field.fullWidth }"
       >
         <label
-          v-if="!['checkbox', 'toggle','divider'].includes(field.type)"
+          v-if="!['checkbox', 'toggle', 'divider'].includes(field.type)"
           :for="field.name"
           class="form-label"
         >
@@ -90,6 +90,25 @@
           class="custom-input custom-dropdown"
           @change="validateField(field)"
         />
+
+        <div v-else-if="field.type === 'searchable-select'" class="searchable-select-wrapper">
+          <span class="input-icon material-icons-round searchable-icon">search</span>
+          <AutoComplete
+            :id="field.name"
+            v-model="searchableSelectDisplay[field.name]"
+            :suggestions="searchableSuggestions[field.name] || []"
+            optionLabel="label"
+            :placeholder="field.placeholder || 'Search and select...'"
+            :forceSelection="true"
+            :dropdown="true"
+            dropdownIcon="pi pi-chevron-down"
+            class="custom-input custom-autocomplete"
+            @complete="filterSearchableOptions($event, field)"
+            @option-select="onSearchableSelect($event, field)"
+            @clear="onSearchableClear(field)"
+            @blur="validateField(field)"
+          />
+        </div>
 
         <MultiSelect
           v-else-if="field.type === 'multiselect'"
@@ -269,6 +288,7 @@
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
+import AutoComplete from 'primevue/autocomplete';
 import MultiSelect from 'primevue/multiselect';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
@@ -285,6 +305,7 @@ export default {
     InputText,
     Textarea,
     Select,
+    AutoComplete,
     MultiSelect,
     Checkbox,
     RadioButton,
@@ -318,6 +339,8 @@ export default {
       errors: {},
       passwordVisible: {},
       fileNames: {},
+      searchableSelectDisplay: {},
+      searchableSuggestions: {},
     };
   },
 
@@ -331,6 +354,13 @@ export default {
         this.formData[field.name] = field.defaultValue ?? field.min ?? 0;
       } else if (field.type === 'color') {
         this.formData[field.name] = field.defaultValue ?? 'ffffff';
+      } else if (field.type === 'searchable-select') {
+        this.formData[field.name] = field.defaultValue ?? null;
+        const defaultOption = field.defaultValue
+          ? field.options?.find(o => o.value === field.defaultValue) ?? null
+          : null;
+        this.searchableSelectDisplay[field.name] = defaultOption;
+        this.searchableSuggestions[field.name] = [];
       } else {
         this.formData[field.name] = field.defaultValue ?? null;
       }
@@ -367,6 +397,25 @@ export default {
 
     removeTag(name, index) {
       this.formData[name] = this.formData[name].filter((_, i) => i !== index);
+    },
+
+    filterSearchableOptions(event, field) {
+      const query = (event.query || '').toLowerCase().trim();
+      const options = field.options || [];
+      this.searchableSuggestions[field.name] = query
+        ? options.filter(o => o.label.toLowerCase().includes(query))
+        : [...options];
+    },
+
+    onSearchableSelect(event, field) {
+      this.formData[field.name] = event.value?.value ?? null;
+      this.validateField(field);
+    },
+
+    onSearchableClear(field) {
+      this.formData[field.name] = null;
+      this.searchableSelectDisplay[field.name] = null;
+      this.validateField(field);
     },
 
     validateField(field) {
@@ -466,14 +515,15 @@ export default {
 .form-group:has(.form-divider),
 .form-group:has(.radio-group),
 .form-group:has(.tags-wrapper),
-.form-group:has(.custom-textarea) {
+.form-group:has(.custom-textarea),
+.form-group:has(.searchable-select-wrapper) {
   grid-column: 1 / -1;
 }
 
 .form-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: hsl(from var(--foreground) h s calc( l * 1.5 ));
+  color: hsl(from var(--foreground) h s calc(l * 1.5));
   letter-spacing: 0.04em;
   text-transform: uppercase;
   display: flex;
@@ -490,7 +540,7 @@ export default {
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  color: hsl(from var(--foreground) h s calc( l * 0.7 ));
+  color: hsl(from var(--foreground) h s calc(l * 0.7));
   font-size: 0.75rem;
   margin-left: auto;
 }
@@ -508,7 +558,7 @@ export default {
   pointer-events: none;
   z-index: 2;
   opacity: 0.45;
-  color: hsl(from var(--foreground) h s calc( l * 0.7 ));
+  color: hsl(from var(--foreground) h s calc(l * 0.7));
   user-select: none;
 }
 
@@ -563,7 +613,7 @@ export default {
   justify-content: center;
   transition: background 0.15s, color 0.15s;
   z-index: 3;
-  color: hsl(from var(--foreground) h s calc( l * 1.1 ));
+  color: hsl(from var(--foreground) h s calc(l * 1.1));
 }
 
 .password-toggle:hover {
@@ -597,7 +647,7 @@ export default {
 .char-counter {
   align-self: flex-end;
   font-size: 0.72rem;
-  color: hsl(from var(--foreground) h s calc( l * 0.7 ));
+  color: hsl(from var(--foreground) h s calc(l * 0.7));
   font-family: inherit;
   margin-top: 0.25rem;
 }
@@ -612,6 +662,111 @@ export default {
   font-family: inherit;
   font-size: 0.9rem;
   color: var(--foreground);
+}
+
+.searchable-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchable-icon {
+  position: absolute;
+  left: 0.85rem;
+  font-size: 1.1rem;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.45;
+  color: hsl(from var(--foreground) h s calc(l * 0.7));
+  user-select: none;
+}
+
+:deep(.custom-autocomplete) {
+  width: 100%;
+}
+
+:deep(.custom-autocomplete .p-autocomplete-input) {
+  width: 100%;
+  padding-left: 2.6rem;
+  background: color-mix(in srgb, var(--background) 60%);
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 60%, transparent);
+  border-radius: 10px;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+  padding-right: 2.4rem;
+  padding-left: 2.6rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+:deep(.custom-autocomplete .p-autocomplete-input::placeholder) {
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+:deep(.custom-autocomplete .p-autocomplete-input:focus) {
+  outline: none;
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--background) 30%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+:deep(.custom-autocomplete .p-autocomplete-dropdown) {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  color: hsl(from var(--foreground) h s calc(l * 0.7));
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+:deep(.custom-autocomplete .p-autocomplete-dropdown:hover) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+:deep(.p-autocomplete-overlay) {
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+:deep(.p-autocomplete-option) {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+:deep(.p-autocomplete-option:hover),
+:deep(.p-autocomplete-option.p-focus) {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--foreground);
+}
+
+:deep(.p-autocomplete-option.p-highlight) {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+:deep(.p-autocomplete-empty-message) {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  color: hsl(from var(--foreground) h s calc(l * 0.6));
+  font-family: inherit;
 }
 
 .radio-group {
@@ -639,8 +794,8 @@ export default {
 
 .radio-option.selected {
   border-color: var(--primary);
-  background: color-mix(in srgb, hsl(from var(--primary) h s calc( l * 0.7 )) 10%, transparent);
-  box-shadow: 0 0 0 1px hsl(from var(--primary) h s calc( l * 0.7 ));
+  background: color-mix(in srgb, hsl(from var(--primary) h s calc(l * 0.7)) 10%, transparent);
+  box-shadow: 0 0 0 1px hsl(from var(--primary) h s calc(l * 0.7));
 }
 
 .radio-label {
@@ -878,7 +1033,7 @@ export default {
   content: '';
   flex: 1;
   height: 1px;
-  background: hsl(from var(--primary) h s calc( l * 1.1 ));
+  background: hsl(from var(--primary) h s calc(l * 1.1));
 }
 
 .divider-label {
@@ -913,7 +1068,7 @@ export default {
 :deep(.submit-btn) {
   grid-column: 1 / -1;
   width: 100%;
-  background:  color-mix(in srgb, hsl(from var(--primary) h s calc( l / 2 )) 70%, transparent) ;
+  background: color-mix(in srgb, hsl(from var(--primary) h s calc(l / 2)) 70%, transparent);
   border-color: var(--primary);
   color: #e2e4ff;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.542);
@@ -924,7 +1079,6 @@ export default {
   border-radius: 12px;
   margin-top: 0.5rem;
   letter-spacing: 0.02em;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
   position: relative;
   overflow: hidden;
   transition: 200ms ease-in-out;
