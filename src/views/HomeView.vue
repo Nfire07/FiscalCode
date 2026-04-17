@@ -4,6 +4,7 @@ import DynamicForm from '@/components/DynamicForm.vue';
 import Fab from '@/components/Fab.vue';
 import Layout from '@/components/Layout.vue';
 import Modal from '@/components/Modal.vue';
+import Alert from '@/components/Alert.vue';
 import Papa from 'papaparse';
 
 export default {
@@ -14,7 +15,8 @@ export default {
     Layout,
     Modal,
     DataTable,
-    Fab
+    Fab,
+    Alert
   },
 
   data() {
@@ -23,7 +25,32 @@ export default {
       codiceFiscale: "",
       isCFOpen:false,
       isCTOpen:false,
-      formSchema: [
+      error:false,
+      errorMessage:"",
+    };
+  },
+
+  async mounted() {
+    const catastaleFile = await fetch('/src/assets/catastale.csv');
+    const text = await catastaleFile.text();
+    const result = Papa.parse(text, {
+      header: false,
+      skipEmptyLines: true,
+      dynamicTyping: false
+    });
+    this.catastale = result.data
+      .filter(row => row.length >= 2 && row[0] && row[1])
+      .map(row => ({
+        codice: row[0].trim(),
+        comune: row[1].trim().toUpperCase()
+      }));
+  },
+  computed:{
+    getCatastaleOptions(){
+      return this.catastale.map(x => ({ label: x.comune, value: x.comune }));
+    },
+    formSchema(){
+      return [
         {
           type: "divider",
           name: "divider",
@@ -61,12 +88,13 @@ export default {
           fullWidth: true,
         },
         {
-          type: "text",
+          type: 'searchable-select',
           name: "citta_nascita",
           label: "CITTÀ DI NASCITA",
           placeholder: "Scrivi qui la tua città di nascita...",
           required: true,
           fullWidth: true,
+          options: this.getCatastaleOptions,
         },
         {
           type: "select",
@@ -80,33 +108,17 @@ export default {
           ],
           fullWidth: true,
         },
-      ],
-    };
+      ];
+    }
   },
-
-  async mounted() {
-    const catastaleFile = await fetch('/src/assets/catastale.csv');
-    const text = await catastaleFile.text();
-    const result = Papa.parse(text, {
-      header: false,
-      skipEmptyLines: true,
-      dynamicTyping: false
-    });
-    this.catastale = result.data
-      .filter(row => row.length >= 2 && row[0] && row[1])
-      .map(row => ({
-        codice: row[0].trim(),
-        comune: row[1].trim().toUpperCase()
-      }));
-  },
-
   methods: {
     submit(data) {
       const cittaInput = data.citta_nascita.trim().toUpperCase();
       const record = this.catastale.find(row => row.comune === cittaInput);
 
       if (!record) {
-        alert(`Comune "${data.citta_nascita}" non trovato nel database.`);
+        this.error = true;
+        this.errorMessage = "La tua citta\' non e\' stata trovata!";
         return;
       }
 
@@ -213,7 +225,7 @@ export default {
       <h1>{{ codiceFiscale }}</h1>
   </Modal>
 
-  <Modal v-model="isCTOpen" width="1000px" max-height="1100px">
+  <Modal v-model="isCTOpen" width="1000px" max-height="1000px">
     <DataTable
       :columns="[
         { key: 'codice', label: 'Codice' },
@@ -222,6 +234,16 @@ export default {
       :rows="catastale"
       :rowsPerPageOptions="[10]"
     />
+  </Modal>
+  <Modal v-model="error" width="500px" max-height="1000px">
+    <Alert
+      type="error"
+      title="Errore durante la ricerca del codice fiscale"
+      :message="errorMessage"
+      :dismissible="false"
+      v-model="error"
+    />
+  
   </Modal>
 
   <Fab
